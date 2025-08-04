@@ -3,25 +3,24 @@
  * Handles all OpenAI API interactions for intelligent travel planning
  */
 
-const POE_API_KEY = import.meta.env.VITE_POE_API_KEY;
-const POE_BASE_URL = 'https://api.poe.com/v1';
-const API_URL = `${POE_BASE_URL}/chat/completions`;
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 /**
  * Base OpenAI API call function
  */
-async function callOpenAI(messages, model = 'GPT-4o', temperature = 0.7) {
-  if (!POE_API_KEY) {
-    console.warn('Poe API key not found. Using mock responses.');
+async function callOpenAI(messages, model = 'gpt-4', temperature = 0.7) {
+  if (!OPENAI_API_KEY) {
+    console.warn('OpenAI API key not found. Using mock responses.');
     return null;
   }
 
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${POE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model,
@@ -32,13 +31,13 @@ async function callOpenAI(messages, model = 'GPT-4o', temperature = 0.7) {
     });
 
     if (!response.ok) {
-      throw new Error(`Poe API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();
     return data.choices[0]?.message?.content;
   } catch (error) {
-    console.error('Poe API call failed:', error);
+    console.error('OpenAI API call failed:', error);
     return null;
   }
 }
@@ -150,7 +149,7 @@ Make sure the itinerary is realistic, well-paced, and fits within the budget. In
     }
   ];
 
-  const response = await callOpenAI(messages, 'GPT-4o', 0.7);
+  const response = await callOpenAI(messages, 'gpt-4', 0.7);
   
   if (response) {
     try {
@@ -239,7 +238,7 @@ Please provide recommendations in this JSON format:
     }
   ];
 
-  const response = await callOpenAI(messages, 'GPT-4o', 0.8);
+  const response = await callOpenAI(messages, 'gpt-4', 0.8);
   
   if (response) {
     try {
@@ -288,7 +287,7 @@ If any information is missing, set it to null.`;
     }
   ];
 
-  const response = await callOpenAI(messages, 'GPT-4o', 0.3);
+  const response = await callOpenAI(messages, 'gpt-4', 0.3);
   
   if (response) {
     try {
@@ -342,7 +341,7 @@ Provide an optimized route in JSON format:
     }
   ];
 
-  const response = await callOpenAI(messages, 'GPT-4o', 0.5);
+  const response = await callOpenAI(messages, 'gpt-4', 0.5);
   
   if (response) {
     try {
@@ -392,7 +391,7 @@ Please provide recommendations in JSON format:
     }
   ];
 
-  const response = await callOpenAI(messages, 'GPT-4o', 0.8);
+  const response = await callOpenAI(messages, 'gpt-4', 0.8);
   
   if (response) {
     try {
