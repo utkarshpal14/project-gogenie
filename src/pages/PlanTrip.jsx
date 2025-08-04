@@ -30,9 +30,13 @@ import {
   Navigation,
   User,
   Mail,
-  Lock
+  Lock,
+  Brain,
+  Zap
 } from "lucide-react";
 import Map from "@/components/Map";
+import { generateSmartItinerary } from "@/services/ai";
+import AITripPlanner from "@/components/AITripPlanner";
 
 // List of all available interests
 const allInterests = [
@@ -131,6 +135,7 @@ export default function PlanTrip() {
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
   const [showStartSuggestions, setShowStartSuggestions] = useState(false);
   const [showDestSuggestions, setShowDestSuggestions] = useState(false);
+  const [planningMode, setPlanningMode] = useState('manual'); // 'manual' or 'ai'
   const startLocationRef = useRef(null);
   const destinationRef = useRef(null);
   
@@ -198,8 +203,48 @@ export default function PlanTrip() {
       methods.setValue("travelGroupSize", currentValue - 1);
     }
   };
+
+  // Handle AI trip data extraction
+  const handleAITripDataExtracted = (extractedData) => {
+    // Pre-fill form with extracted data
+    if (extractedData.destination) {
+      methods.setValue("destination", extractedData.destination);
+    }
+    if (extractedData.duration) {
+      // Calculate end date based on duration
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + extractedData.duration);
+      methods.setValue("startDate", startDate.toISOString().split('T')[0]);
+      methods.setValue("endDate", endDate.toISOString().split('T')[0]);
+    }
+    if (extractedData.budget) {
+      methods.setValue("budget", extractedData.budget);
+    }
+    if (extractedData.groupSize) {
+      methods.setValue("travelGroupSize", extractedData.groupSize);
+    }
+    if (extractedData.interests) {
+      methods.setValue("interests", extractedData.interests);
+    }
+    if (extractedData.foodPreferences) {
+      methods.setValue("foodPreference", extractedData.foodPreferences);
+    }
+    if (extractedData.transportPreference) {
+      methods.setValue("transportationMode", extractedData.transportPreference);
+    }
+
+    // Switch to manual mode to continue with the form
+    setPlanningMode('manual');
+    setCurrentStep(1); // Skip account creation step
+
+    toast({
+      title: "Form Pre-filled! 🎯",
+      description: "AI has filled in your trip details. You can now review and adjust them.",
+    });
+  };
   
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     // Validation for the current step before submission
     if (currentStep === steps.length - 1) {
       setIsLoading(true);
@@ -207,109 +252,172 @@ export default function PlanTrip() {
       // Show confetti
       setShowConfetti(true);
       
-      // Create trip data object
-      const tripData = {
+      // Prepare data for AI processing
+      const aiTripData = {
         destination: data.destination,
         startLocation: data.startLocation,
-        dateRange: `${data.startDate} to ${data.endDate}`,
         duration: Math.ceil((new Date(data.endDate) - new Date(data.startDate)) / (1000 * 60 * 60 * 24)),
-        budget: {
-          total: data.budget,
-          used: Math.round(data.budget * 0.875), // 87.5% used
-          breakdown: {
-            accommodation: Math.round(data.budget * 0.4),
-            food: Math.round(data.budget * 0.23),
-            activities: Math.round(data.budget * 0.2),
-            transportation: Math.round(data.budget * 0.17)
-          }
-        },
-        weather: [
-          { day: "Day 1", condition: "sunny", temp: "72°F" },
-          { day: "Day 2", condition: "partly-cloudy", temp: "68°F" },
-          { day: "Day 3", condition: "partly-cloudy", temp: "70°F" },
-          { day: "Day 4", condition: "sunny", temp: "75°F" },
-          { day: "Day 5", condition: "sunny", temp: "77°F" },
-          { day: "Day 6", condition: "cloudy", temp: "65°F" },
-          { day: "Day 7", condition: "partly-cloudy", temp: "68°F" }
-        ],
-        itinerary: [
-          {
-            day: "Day 1",
-            activities: [
-              { time: "9:00 AM", activity: "Arrive at destination" },
-              { time: "11:00 AM", activity: "Check-in at hotel" },
-              { time: "1:00 PM", activity: "Local lunch experience" },
-              { time: "3:00 PM", activity: "Explore the city" },
-              { time: "7:00 PM", activity: "Dinner at local restaurant" }
-            ]
-          },
-          {
-            day: "Day 2",
-            activities: [
-              { time: "9:00 AM", activity: "Breakfast at hotel" },
-              { time: "10:00 AM", activity: "Visit main attractions" },
-              { time: "1:00 PM", activity: "Local cuisine lunch" },
-              { time: "3:00 PM", activity: "Cultural experience" },
-              { time: "8:00 PM", activity: "Evening entertainment" }
-            ]
-          }
-        ],
-        hotels: [
-          {
-            name: "Premium Hotel",
-            address: "City Center, Destination",
-            rating: 4.5,
-            price: "₹16,700/night",
-            amenities: ["Free WiFi", "Restaurant", "Bar", "Fitness center"],
-            image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070&auto=format&fit=crop"
-          }
-        ],
-        restaurants: [
-          {
-            name: "Local Cuisine Restaurant",
-            cuisine: "Local",
-            rating: 4.4,
-            priceRange: "₹₹",
-            address: "City Center, Destination",
-            image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?q=80&w=2071&auto=format&fit=crop"
-          }
-        ],
-        transportation: {
-          fromAirport: {
-            options: ["Taxi", "Metro", "Bus"],
-            recommended: "Taxi",
-            cost: "₹4,175-5,010"
-          },
-          localTransportation: {
-            options: ["Metro", "Bus", "Bike rental", "Walking"],
-            recommended: "Metro + Walking",
-            metroPass: "City pass (5 days): ₹3,200"
-          }
-        },
-        packingList: [
-          "Passport and travel documents",
-          "Local currency",
-          "Comfortable walking shoes",
-          "Universal power adapter",
-          "Camera",
-          "Sunglasses",
-          "Weather-appropriate clothing"
-        ]
+        budget: data.budget,
+        interests: selectedInterests,
+        travelStyle: data.travelStyle,
+        groupSize: data.travelers,
+        foodPreferences: data.foodPreference,
+        transportPreference: data.transportPreference
       };
-      
-      // Save trip data to localStorage
-      localStorage.setItem('plannedTrip', JSON.stringify(tripData));
-      
-      // Simulate API call with timeout
-      setTimeout(() => {
+
+      try {
+        // Generate AI-powered itinerary
+        const aiResponse = await generateSmartItinerary(aiTripData);
+        
+        // Create enhanced trip data object with AI recommendations
+        const tripData = {
+          destination: data.destination,
+          startLocation: data.startLocation,
+          dateRange: `${data.startDate} to ${data.endDate}`,
+          duration: aiTripData.duration,
+          budget: {
+            total: data.budget,
+            used: aiResponse?.budgetBreakdown ? 
+              Object.values(aiResponse.budgetBreakdown).reduce((sum, val) => sum + val, 0) :
+              Math.round(data.budget * 0.875),
+            breakdown: aiResponse?.budgetBreakdown || {
+              accommodation: Math.round(data.budget * 0.4),
+              food: Math.round(data.budget * 0.23),
+              activities: Math.round(data.budget * 0.2),
+              transportation: Math.round(data.budget * 0.17)
+            }
+          },
+          weather: [
+            { day: "Day 1", condition: "sunny", temp: "72°F" },
+            { day: "Day 2", condition: "partly-cloudy", temp: "68°F" },
+            { day: "Day 3", condition: "partly-cloudy", temp: "70°F" },
+            { day: "Day 4", condition: "sunny", temp: "75°F" },
+            { day: "Day 5", condition: "sunny", temp: "77°F" },
+            { day: "Day 6", condition: "cloudy", temp: "65°F" },
+            { day: "Day 7", condition: "partly-cloudy", temp: "68°F" }
+          ],
+          itinerary: aiResponse?.itinerary || [
+            {
+              day: "Day 1",
+              activities: [
+                { time: "9:00 AM", activity: "Arrive at destination" },
+                { time: "11:00 AM", activity: "Check-in at hotel" },
+                { time: "1:00 PM", activity: "Local lunch experience" },
+                { time: "3:00 PM", activity: "Explore the city" },
+                { time: "7:00 PM", activity: "Dinner at local restaurant" }
+              ]
+            }
+          ],
+          hotels: aiResponse?.recommendations?.hotels || [
+            {
+              name: "Premium Hotel",
+              address: "City Center, Destination",
+              rating: 4.5,
+              price: "₹16,700/night",
+              amenities: ["Free WiFi", "Restaurant", "Bar", "Fitness center"],
+              image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070&auto=format&fit=crop"
+            }
+          ],
+          restaurants: aiResponse?.recommendations?.restaurants || [
+            {
+              name: "Local Cuisine Restaurant",
+              cuisine: "Local",
+              rating: 4.4,
+              priceRange: "₹₹",
+              address: "City Center, Destination",
+              image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?q=80&w=2071&auto=format&fit=crop"
+            }
+          ],
+          transportation: {
+            fromAirport: {
+              options: ["Taxi", "Metro", "Bus"],
+              recommended: "Taxi",
+              cost: "₹4,175-5,010"
+            },
+            localTransportation: {
+              options: ["Metro", "Bus", "Bike rental", "Walking"],
+              recommended: "Metro + Walking",
+              metroPass: "City pass (5 days): ₹3,200"
+            }
+          },
+          packingList: aiResponse?.packingList || [
+            "Passport and travel documents",
+            "Local currency",
+            "Comfortable walking shoes",
+            "Universal power adapter",
+            "Camera",
+            "Sunglasses",
+            "Weather-appropriate clothing"
+          ],
+          localTips: aiResponse?.localTips || [],
+          emergencyContacts: aiResponse?.emergencyContacts || {
+            police: "911",
+            hospital: "911",
+            embassy: "Contact local embassy"
+          }
+                };
+        
+        // Save trip data to localStorage
+        localStorage.setItem('plannedTrip', JSON.stringify(tripData));
+        
+        // Show success message
         toast({
-          title: "Trip plan created!",
-          description: `Your trip from ${data.startLocation} to ${data.destination} is being prepared.`,
+          title: "AI-Powered Trip Created! 🧠",
+          description: `Your personalized trip from ${data.startLocation} to ${data.destination} is ready!`,
         });
+        
         setIsLoading(false);
         setShowConfetti(false);
         navigate("/trip-result", { state: { tripData } });
-      }, 3000);
+        
+      } catch (error) {
+        console.error('AI itinerary generation failed:', error);
+        
+        // Fallback to basic trip data
+        const fallbackTripData = {
+          destination: data.destination,
+          startLocation: data.startLocation,
+          dateRange: `${data.startDate} to ${data.endDate}`,
+          duration: Math.ceil((new Date(data.endDate) - new Date(data.startDate)) / (1000 * 60 * 60 * 24)),
+          budget: {
+            total: data.budget,
+            used: Math.round(data.budget * 0.875),
+            breakdown: {
+              accommodation: Math.round(data.budget * 0.4),
+              food: Math.round(data.budget * 0.23),
+              activities: Math.round(data.budget * 0.2),
+              transportation: Math.round(data.budget * 0.17)
+            }
+          },
+          itinerary: [
+            {
+              day: "Day 1",
+              activities: [
+                { time: "9:00 AM", activity: "Arrive at destination" },
+                { time: "11:00 AM", activity: "Check-in at hotel" },
+                { time: "1:00 PM", activity: "Local lunch experience" },
+                { time: "3:00 PM", activity: "Explore the city" },
+                { time: "7:00 PM", activity: "Dinner at local restaurant" }
+              ]
+            }
+          ],
+          hotels: [],
+          restaurants: [],
+          transportation: {},
+          packingList: ["Passport", "Comfortable shoes", "Camera"]
+        };
+        
+        localStorage.setItem('plannedTrip', JSON.stringify(fallbackTripData));
+        
+        toast({
+          title: "Trip Created!",
+          description: `Your trip from ${data.startLocation} to ${data.destination} is ready!`,
+        });
+        
+        setIsLoading(false);
+        setShowConfetti(false);
+        navigate("/trip-result", { state: { tripData: fallbackTripData } });
+      }
     } else {
       nextStep();
     }
@@ -361,6 +469,30 @@ export default function PlanTrip() {
         <p className="text-muted-foreground">
           Let our genie craft a personalized itinerary for you
         </p>
+        
+        {/* Planning Mode Toggle */}
+        <div className="flex justify-center mt-4">
+          <div className="bg-muted rounded-lg p-1 flex">
+            <Button
+              variant={planningMode === 'manual' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setPlanningMode('manual')}
+              className={planningMode === 'manual' ? 'bg-goginie-primary hover:bg-goginie-secondary' : ''}
+            >
+              <Compass className="h-4 w-4 mr-2" />
+              Manual Planning
+            </Button>
+            <Button
+              variant={planningMode === 'ai' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setPlanningMode('ai')}
+              className={planningMode === 'ai' ? 'bg-goginie-primary hover:bg-goginie-secondary' : ''}
+            >
+              <Brain className="h-4 w-4 mr-2" />
+              AI Planning
+            </Button>
+          </div>
+        </div>
       </div>
       
       {/* Progress bar */}
@@ -380,9 +512,12 @@ export default function PlanTrip() {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)}>
-              <Card className="p-6">
+          {planningMode === 'ai' ? (
+            <AITripPlanner onTripDataExtracted={handleAITripDataExtracted} />
+          ) : (
+            <FormProvider {...methods}>
+              <form onSubmit={methods.handleSubmit(onSubmit)}>
+                <Card className="p-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentStep}
@@ -869,6 +1004,7 @@ export default function PlanTrip() {
               </Card>
             </form>
           </FormProvider>
+          )}
         </div>
         
         {/* Trip Preview Sidebar */}
