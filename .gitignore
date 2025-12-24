@@ -1,0 +1,20 @@
+i want to ignore the following files and directories in my git repository:
+# Ignore node modules
+node_modules/
+# Ignore log files
+*.log
+# Ignore environment variable files
+.env
+# Ignore build directory
+build/
+
+# Ignore temporary files
+*.tmp
+
+# Ignore coverage directory
+coverage/
+# Ignore IDE specific files
+.vscode/
+.idea/
+# Ignore OS generated files
+.DS_Store
