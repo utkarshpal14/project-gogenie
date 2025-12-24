@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Compass, User, Menu } from "lucide-react";
+import { Compass, User, Menu, Calendar, BookOpen } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -33,6 +33,18 @@ export default function Navbar() {
           
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
+              <Link to="/booking">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Calendar size={18} />
+                  Book Now
+                </Button>
+              </Link>
+              <Link to="/my-bookings">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <BookOpen size={18} />
+                  My Bookings
+                </Button>
+              </Link>
               <Link to="/dashboard">
                 <Button variant="outline" className="flex items-center gap-2">
                   <User size={18} />
@@ -76,9 +88,19 @@ export default function Navbar() {
                 </Link>
                 <div className="border-t my-2"></div>
                 {isAuthenticated ? (
-                  <Link to="/dashboard" className="text-lg font-medium py-2 px-4 hover:bg-muted rounded-md">
-                    Dashboard
-                  </Link>
+                  <>
+                    <Link to="/booking" className="text-lg font-medium py-2 px-4 hover:bg-muted rounded-md flex items-center gap-2">
+                      <Calendar size={18} />
+                      Book Now
+                    </Link>
+                    <Link to="/my-bookings" className="text-lg font-medium py-2 px-4 hover:bg-muted rounded-md flex items-center gap-2">
+                      <BookOpen size={18} />
+                      My Bookings
+                    </Link>
+                    <Link to="/dashboard" className="text-lg font-medium py-2 px-4 hover:bg-muted rounded-md">
+                      Dashboard
+                    </Link>
+                  </>
                 ) : (
                   <>
                     <Link to="/login" className="text-lg font-medium py-2 px-4 hover:bg-muted rounded-md">

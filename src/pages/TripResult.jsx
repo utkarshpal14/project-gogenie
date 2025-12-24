@@ -274,26 +274,28 @@ export default function TripResult() {
     };
     
     // Update hotels pricing to INR
-    if (processedData.hotels) {
+    if (processedData.hotels && Array.isArray(processedData.hotels)) {
       processedData.hotels = processedData.hotels.map(hotel => {
-        const priceText = hotel.price;
-        if (priceText.includes("$")) {
+        const priceText = hotel?.price || hotel?.priceRange || "";
+        if (priceText && typeof priceText === 'string' && priceText.includes("$")) {
           const priceValue = parseInt(priceText.replace(/[^\d]/g, ''));
-          const inrPrice = convertToINR(priceValue);
-          return {
-            ...hotel,
-            price: `₹${inrPrice.toLocaleString()}/night`
-          };
+          if (!isNaN(priceValue)) {
+            const inrPrice = convertToINR(priceValue);
+            return {
+              ...hotel,
+              price: `₹${inrPrice.toLocaleString()}/night`
+            };
+          }
         }
         return hotel;
       });
     }
     
     // Update restaurant pricing to INR (priceRange)
-    if (processedData.restaurants) {
+    if (processedData.restaurants && Array.isArray(processedData.restaurants)) {
       processedData.restaurants = processedData.restaurants.map(restaurant => ({
         ...restaurant,
-        priceRange: restaurant.priceRange.replace(/\$/g, "₹")
+        priceRange: restaurant?.priceRange ? restaurant.priceRange.replace(/\$/g, "₹") : "₹₹"
       }));
     }
     
@@ -442,17 +444,17 @@ export default function TripResult() {
                   <Card key={index} className="overflow-hidden">
                     <div 
                       className="h-40 bg-cover bg-center" 
-                      style={{ backgroundImage: `url(${hotel.image})` }}
+                      style={{ backgroundImage: `url(${hotel?.image || '/placeholder.svg'})` }}
                     ></div>
                     <CardContent className="p-4">
-                      <h3 className="font-semibold text-lg">{hotel.name}</h3>
-                      <p className="text-sm text-muted-foreground">{hotel.address}</p>
+                      <h3 className="font-semibold text-lg">{hotel?.name || 'Hotel Name'}</h3>
+                      <p className="text-sm text-muted-foreground">{hotel?.address || 'Address not specified'}</p>
                       <div className="flex items-center mt-2 mb-1">
                         <div className="flex">
                           {Array(5).fill(0).map((_, i) => (
                             <svg 
                               key={i} 
-                              className={`w-4 h-4 ${i < Math.floor(hotel.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                              className={`w-4 h-4 ${i < Math.floor(hotel?.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
                               fill="currentColor" 
                               viewBox="0 0 20 20" 
                               xmlns="http://www.w3.org/2000/svg"
@@ -461,11 +463,11 @@ export default function TripResult() {
                             </svg>
                           ))}
                         </div>
-                        <span className="ml-2 text-sm">{hotel.rating}/5</span>
+                        <span className="ml-2 text-sm">{hotel?.rating || 0}/5</span>
                       </div>
-                      <p className="text-sm font-semibold">{hotel.price}</p>
+                      <p className="text-sm font-semibold">{hotel?.price || 'Price not specified'}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {hotel.amenities.map((amenity, i) => (
+                        {(hotel?.amenities || []).map((amenity, i) => (
                           <span key={i} className="text-xs bg-muted px-2 py-1 rounded-full">
                             {amenity}
                           </span>
@@ -483,18 +485,18 @@ export default function TripResult() {
                   <Card key={index} className="overflow-hidden">
                     <div 
                       className="h-40 bg-cover bg-center" 
-                      style={{ backgroundImage: `url(${restaurant.image})` }}
+                      style={{ backgroundImage: `url(${restaurant?.image || '/placeholder.svg'})` }}
                     ></div>
                     <CardContent className="p-4">
-                      <h3 className="font-semibold text-lg">{restaurant.name}</h3>
-                      <p className="text-sm text-muted-foreground">{restaurant.address}</p>
+                      <h3 className="font-semibold text-lg">{restaurant?.name || 'Restaurant Name'}</h3>
+                      <p className="text-sm text-muted-foreground">{restaurant?.address || 'Address not specified'}</p>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center">
                           <div className="flex">
                             {Array(5).fill(0).map((_, i) => (
                               <svg 
                                 key={i} 
-                                className={`w-4 h-4 ${i < Math.floor(restaurant.rating) ? 'text-yellow-400' : 'text-gray-300'}`} 
+                                className={`w-4 h-4 ${i < Math.floor(restaurant?.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`} 
                                 fill="currentColor" 
                                 viewBox="0 0 20 20" 
                                 xmlns="http://www.w3.org/2000/svg"
@@ -503,13 +505,13 @@ export default function TripResult() {
                               </svg>
                             ))}
                           </div>
-                          <span className="ml-2 text-sm">{restaurant.rating}/5</span>
+                          <span className="ml-2 text-sm">{restaurant?.rating || 0}/5</span>
                         </div>
-                        <span className="text-sm font-semibold">{restaurant.priceRange}</span>
+                        <span className="text-sm font-semibold">{restaurant?.priceRange || 'Price not specified'}</span>
                       </div>
                       <div className="mt-2">
                         <span className="text-sm bg-muted px-2 py-1 rounded-full">
-                          {restaurant.cuisine}
+                          {restaurant?.cuisine || 'Cuisine not specified'}
                         </span>
                       </div>
                     </CardContent>
@@ -527,11 +529,13 @@ export default function TripResult() {
                         <h3 className="font-semibold text-lg mb-2">Airport Transfer</h3>
                         <p><span className="font-medium">Recommended:</span> {tripData.transportation.fromAirport.recommended}</p>
                         <p><span className="font-medium">Estimated Cost:</span> {
-                          tripData.transportation.fromAirport.cost.includes("€") 
-                            ? tripData.transportation.fromAirport.cost 
-                            : tripData.transportation.fromAirport.cost.includes("$")
-                              ? `₹${convertToINR(parseInt(tripData.transportation.fromAirport.cost.replace(/[^\d]/g, '')))}`
-                              : tripData.transportation.fromAirport.cost
+                          tripData.transportation?.fromAirport?.cost ? (
+                            tripData.transportation.fromAirport.cost.includes("€") 
+                              ? tripData.transportation.fromAirport.cost 
+                              : tripData.transportation.fromAirport.cost.includes("$")
+                                ? `₹${convertToINR(parseInt(tripData.transportation.fromAirport.cost.replace(/[^\d]/g, '')))}`
+                                : tripData.transportation.fromAirport.cost
+                          ) : "Not specified"
                         }</p>
                         <p className="mt-2 text-sm">Other options: {tripData.transportation.fromAirport.options.join(", ")}</p>
                       </div>
@@ -542,10 +546,11 @@ export default function TripResult() {
                         <h3 className="font-semibold text-lg mb-2">Local Transportation</h3>
                         <p><span className="font-medium">Recommended:</span> {tripData.transportation.localTransportation.recommended}</p>
                         <p><span className="font-medium">Transit Pass:</span> {
-                          tripData.transportation.localTransportation.metroPass && 
-                          (tripData.transportation.localTransportation.metroPass.includes("$") 
-                            ? `₹${convertToINR(parseInt(tripData.transportation.localTransportation.metroPass.replace(/[^\\d]/g, '')))}`
-                            : tripData.transportation.localTransportation.metroPass)
+                          tripData.transportation?.localTransportation?.metroPass ? (
+                            tripData.transportation.localTransportation.metroPass.includes("$") 
+                              ? `₹${convertToINR(parseInt(tripData.transportation.localTransportation.metroPass.replace(/[^\d]/g, '')))}`
+                              : tripData.transportation.localTransportation.metroPass
+                          ) : "Not specified"
                         }</p>
                         <p className="mt-2 text-sm">All options: {tripData.transportation.localTransportation.options.join(", ")}</p>
                       </div>
@@ -643,21 +648,15 @@ export default function TripResult() {
               <CardTitle className="text-lg">Weather Forecast</CardTitle>
             </CardHeader>
             <CardContent>
-              {tripData.weather ? (
-                <div className="grid grid-cols-7 gap-1">
-                  {tripData.weather.map((day, index) => (
-                    <div key={index} className="text-center">
-                      <p className="text-xs">{day.day.split(" ")[1]}</p>
-                      <div className="flex justify-center my-1">
-                        <WeatherIcon condition={day.condition} />
-                      </div>
-                      <p className="text-xs font-medium">{day.temp}</p>
-                    </div>
-                  ))}
+              {(tripData.weather || []).map((day, index) => (
+                <div key={index} className="text-center">
+                  <p className="text-xs">{day.day.split(" ")[1]}</p>
+                  <div className="flex justify-center my-1">
+                    <WeatherIcon condition={day.condition} />
+                  </div>
+                  <p className="text-xs font-medium">{day.temp}</p>
                 </div>
-              ) : (
-                <p className="text-center text-sm text-muted-foreground">Weather forecast unavailable</p>
-              )}
+              ))}
             </CardContent>
           </Card>
           
@@ -667,31 +666,25 @@ export default function TripResult() {
               <CardTitle className="text-lg">Packing List</CardTitle>
             </CardHeader>
             <CardContent>
-              {tripData.packingList ? (
-                <ul className="space-y-2">
-                  {tripData.packingList.map((item, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <div className="h-5 w-5 rounded-sm border flex items-center justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-3.5 w-3.5"
-                        >
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                      </div>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-center text-sm text-muted-foreground">No packing list available</p>
-              )}
+              {(tripData.packingList || []).map((item, index) => (
+                <li key={index} className="flex items-center gap-2 text-sm">
+                  <div className="h-5 w-5 rounded-sm border flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-3.5 w-3.5"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                  <span>{item}</span>
+                </li>
+              ))}
             </CardContent>
           </Card>
         </div>

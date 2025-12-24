@@ -11,6 +11,8 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import PlanTrip from "./pages/PlanTrip";
 import TripResult from "./pages/TripResult";
+import Booking from "./pages/Booking";
+import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import Explore from "./pages/Explore";
@@ -44,6 +46,16 @@ const App = () => (
             <Route path="/trip-result" element={
               <ProtectedRoute>
                 <Layout><TripResult /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/booking" element={
+              <ProtectedRoute>
+                <Layout><Booking /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/my-bookings" element={
+              <ProtectedRoute>
+                <Layout><MyBookings /></Layout>
               </ProtectedRoute>
             } />
             <Route path="/mood-trip" element={

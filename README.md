@@ -7,6 +7,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-3178C6?style=for-the-badge&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.11-38B2AC?style=for-the-badge&logo=tailwind-css)
 ![Vite](https://img.shields.io/badge/Vite-5.4.1-646CFF?style=for-the-badge&logo=vite)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-AI%20Powered-4285F4?style=for-the-badge&logo=google)
 
 **Your all-in-one AI travel companion that plans and manages your entire trip — so you can focus on enjoying it.**
 
@@ -18,18 +19,18 @@
 
 ## 🎯 What is GoGinie?
 
-GoGinie is a revolutionary full-stack web application enhanced with AI capabilities that offers **end-to-end trip planning and real-time booking** based on user preferences. It's designed to eliminate the hassle of travel planning by automating every aspect of your journey.
+GoGinie is a revolutionary full-stack web application enhanced with **Google Gemini AI** that offers intelligent trip planning and personalized recommendations. It's designed to eliminate the hassle of travel planning by automating every aspect of your journey with cutting-edge AI technology.
 
 ### ✨ Key Features
 
-- 🤖 **AI-Powered Planning**: Intelligent itinerary creation based on your preferences
-- 🎯 **Personalized Recommendations**: Tailored suggestions for hotels, restaurants, and activities
-- 🚀 **Real-Time Booking**: Instant booking for flights, trains, hotels, and activities
-- 🗺️ **Interactive Maps**: Visual trip planning with route optimization
-- 💰 **Budget Management**: Smart budget allocation and tracking
+- 🤖 **AI-Powered Planning**: Google Gemini AI creates intelligent itineraries based on your preferences
+- 🎯 **Personalized Recommendations**: AI-generated suggestions for hotels, restaurants, and activities
+- 🗺️ **Interactive Maps**: Visual trip planning with route optimization using Leaflet & Mapbox
+- 💰 **Smart Budget Management**: AI-powered budget allocation and tracking
 - 📱 **Mobile-First Design**: Responsive interface for all devices
 - 🌙 **Mood-Based Suggestions**: Get recommendations based on your current mood
-- 📊 **Verified Reviews**: Real user reviews and photos for confident choices
+- 🧠 **Natural Language Processing**: Describe your trip in plain English
+- ⚡ **Real-Time AI Responses**: Instant itinerary generation with Google Gemini
 
 ---
 
@@ -59,13 +60,16 @@ GoGinie is a revolutionary full-stack web application enhanced with AI capabilit
    ```
 
 3. **Set up environment variables**
-   ```bash
-   cp .env.example .env.local
-   ```
    
-   Add your API keys to `.env.local`:
+   Create `.env.local` with your API keys:
    ```env
+   # Google Gemini AI (Required for AI features)
+   VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   
+   # Google Maps (Optional for enhanced mapping)
    VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+   
+   # Other APIs (Future features)
    VITE_OPENAI_API_KEY=your_openai_api_key
    VITE_AMADEUS_API_KEY=your_amadeus_api_key
    VITE_STRIPE_PUBLIC_KEY=your_stripe_public_key
@@ -85,6 +89,17 @@ GoGinie is a revolutionary full-stack web application enhanced with AI capabilit
 
 ---
 
+## ⚡ Quick Start
+
+Once your app is running, you can:
+
+1. **Plan a Trip** - Go to "Plan Trip" and fill out the form
+2. **Use AI Planning** - Try the "AI Trip Planner" for natural language input
+3. **Mood-Based Planning** - Visit "Mood-Based Trip" for mood-driven recommendations
+4. **View Results** - See your generated itinerary with maps and recommendations
+
+---
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -98,6 +113,12 @@ GoGinie is a revolutionary full-stack web application enhanced with AI capabilit
 - **React Hook Form** - Form management
 - **Zod** - Schema validation
 
+### AI & External APIs
+- **Google Gemini AI** - AI-powered itinerary generation and recommendations
+- **Leaflet & Mapbox** - Interactive maps and route visualization
+- **OpenStreetMap Nominatim** - Geocoding and location search
+- **Unsplash API** - High-quality travel images
+
 ### Backend (Planned)
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
@@ -106,13 +127,6 @@ GoGinie is a revolutionary full-stack web application enhanced with AI capabilit
 - **Prisma** - Database ORM
 - **JWT** - Authentication
 - **Stripe** - Payment processing
-
-### AI & External APIs
-- **OpenAI GPT-4** - AI-powered recommendations
-- **Google Maps API** - Maps and geocoding
-- **Amadeus API** - Flight and hotel booking
-- **OpenWeather API** - Weather forecasts
-- **Unsplash API** - High-quality images
 
 ### Development Tools
 - **ESLint** - Code linting
@@ -201,21 +215,29 @@ GoGinie uses advanced AI algorithms to create personalized travel plans:
 
 ## 🔧 API Integration
 
-### Current APIs
-- ✅ **OpenStreetMap Nominatim** - Geocoding and location search
-- ✅ **Unsplash** - High-quality travel images
-- 🚧 **Mock Authentication** - User management (development)
+### ✅ Currently Integrated APIs
+- **Google Gemini AI** - AI-powered itinerary generation and recommendations
+- **OpenStreetMap Nominatim** - Geocoding and location search
+- **Leaflet & Mapbox** - Interactive maps and route visualization
+- **Unsplash** - High-quality travel images
+- **Mock Authentication** - User management (development)
 
-### Planned APIs
-- 🔄 **Google Maps Platform** - Maps, Places, and Directions
-- 🔄 **OpenAI GPT-4** - AI recommendations and planning
-- 🔄 **Amadeus Travel APIs** - Flight and hotel booking
-- 🔄 **Stripe** - Payment processing
-- 🔄 **OpenWeather** - Weather forecasts
-- 🔄 **TripAdvisor** - Reviews and ratings
-- 🔄 **Booking.com** - Hotel availability
-- 🔄 **Skyscanner** - Flight search
-- 🔄 **Railway APIs** - Train booking (IRCTC, etc.)
+### 🚧 Planned APIs (Phase 3)
+- **Google Maps Platform** - Enhanced mapping and places data
+- **Amadeus Travel APIs** - Flight and hotel booking
+- **Stripe** - Payment processing
+- **OpenWeather** - Weather forecasts
+- **TripAdvisor** - Reviews and ratings
+- **Booking.com** - Hotel availability
+- **Skyscanner** - Flight search
+- **Railway APIs** - Train booking (IRCTC, etc.)
+
+### 🤖 AI Features Status
+- ✅ **Smart Itinerary Generation** - Working with Google Gemini
+- ✅ **Natural Language Processing** - Trip planning from text descriptions
+- ✅ **Mood-Based Recommendations** - AI suggestions based on user mood
+- ✅ **Personalized Recommendations** - AI-generated hotel, restaurant, and activity suggestions
+- ✅ **Route Optimization** - AI-powered travel route planning
 
 ---
 
@@ -266,7 +288,42 @@ We welcome contributions from the community! Here's how you can help:
 - 🎨 UI/UX enhancements
 - 🧪 Test coverage
 - 🌐 Internationalization
-- ♿ Accessibility improvements
+
+---
+
+## 🛠️ Troubleshooting
+
+### AI Features Not Working
+
+If the AI itinerary generation isn't working:
+
+1. **Check your API key**:
+   ```bash
+   # Verify your .env.local file has the Gemini API key
+   cat .env.local | grep VITE_GEMINI_API_KEY
+   ```
+
+2. **Test the API directly**:
+   ```bash
+   node test-gemini.js
+   ```
+
+3. **Check browser console** for error messages
+
+4. **Verify rate limits** - Gemini has 15 requests per minute limit
+
+### Common Issues
+
+- **"API key not found"** - Make sure `.env.local` exists and has the correct API key
+- **"Rate limit exceeded"** - Wait a minute and try again
+- **"Network error"** - Check your internet connection
+- **Mock data showing** - This means AI API failed, check console for errors
+
+### Getting Help
+
+- Check the [Issues](https://github.com/yourusername/goginie/issues) page
+- Look at the browser console for error messages
+- Test with the provided test scripts
 
 ---
 
@@ -276,10 +333,52 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 🎯 Current Status
+
+### ✅ **Phase 1: Core Features (100% Complete)**
+- [x] User authentication and profiles
+- [x] Basic trip planning interface
+- [x] Interactive maps integration (Leaflet + Mapbox)
+- [x] Mood-based recommendations
+- [x] Responsive design
+- [x] Modern UI with shadcn/ui components
+
+### ✅ **Phase 2: AI Integration (100% Complete)**
+- [x] Google Gemini AI integration
+- [x] Smart itinerary generation
+- [x] Personalized recommendations
+- [x] Natural language trip planning
+- [x] Route optimization
+- [x] Mood-based AI suggestions
+
+### 🚧 **Phase 3: Booking System (0% Complete)**
+- [ ] Flight booking integration
+- [ ] Hotel reservation system
+- [ ] Restaurant booking
+- [ ] Activity ticket booking
+- [ ] Payment processing (Stripe)
+
+### 🔮 **Phase 4: Advanced Features (0% Complete)**
+- [ ] Real-time collaboration
+- [ ] Trip sharing and social features
+- [ ] Advanced analytics
+- [ ] Mobile app development
+- [ ] Offline support
+
+### 🏢 **Phase 5: Enterprise Features (0% Complete)**
+- [ ] Business travel management
+- [ ] Corporate booking tools
+- [ ] Expense tracking
+- [ ] Team collaboration
+- [ ] API for third-party integrations
+
+---
+
 ## 🙏 Acknowledgments
 
-- **OpenAI** for AI capabilities
+- **Google Gemini AI** for powerful AI capabilities
 - **Google Maps** for mapping services
+- **Leaflet & Mapbox** for interactive mapping
 - **Unsplash** for beautiful travel images
 - **Shadcn/ui** for the component library
 - **Vite** for the build tool
@@ -293,44 +392,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 💬 **Discord**: [Join our community](https://discord.gg/goginie)
 - 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/goginie/issues)
 - 📖 **Documentation**: [Wiki](https://github.com/yourusername/goginie/wiki)
-
----
-
-## 🗺️ Roadmap
-
-### Phase 1: Core Features (Current)
-- [x] User authentication and profiles
-- [x] Basic trip planning interface
-- [x] Interactive maps integration
-- [x] Mood-based recommendations
-- [x] Responsive design
-
-### Phase 2: AI Integration (Q2 2024)
-- [ ] OpenAI GPT-4 integration
-- [ ] Smart itinerary generation
-- [ ] Personalized recommendations
-- [ ] Natural language trip planning
-
-### Phase 3: Booking System (Q3 2024)
-- [ ] Flight booking integration
-- [ ] Hotel reservation system
-- [ ] Restaurant booking
-- [ ] Activity ticket booking
-- [ ] Payment processing
-
-### Phase 4: Advanced Features (Q4 2024)
-- [ ] Real-time collaboration
-- [ ] Trip sharing and social features
-- [ ] Advanced analytics
-- [ ] Mobile app development
-- [ ] Offline support
-
-### Phase 5: Enterprise Features (2025)
-- [ ] Business travel management
-- [ ] Corporate booking tools
-- [ ] Expense tracking
-- [ ] Team collaboration
-- [ ] API for third-party integrations
 
 ---
 

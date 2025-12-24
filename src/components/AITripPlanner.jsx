@@ -1,282 +1,634 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { 
-  Brain, 
-  Zap, 
-  Send, 
   MapPin, 
   Calendar, 
   Users, 
-  Wallet, 
-  Sparkles,
-  Loader2
+  DollarSign,
+  Plane,
+  Train,
+  Car,
+  Hotel,
+  Utensils,
+  Clock,
+  Star,
+  Loader2,
+  Bot,
+  CheckCircle,
+  ArrowRight,
+  Globe,
+  Camera,
+  Heart,
+  Coffee
 } from "lucide-react";
-import { processNaturalLanguageRequest } from "@/services/ai";
 
-export default function AITripPlanner({ onTripDataExtracted }) {
-  const [userInput, setUserInput] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [extractedData, setExtractedData] = useState(null);
-  const [confidence, setConfidence] = useState(0);
+// Import AI service
+import { generateSmartItinerary } from "@/services/ai";
+
+export default function AITripPlanner() {
+  const [formData, setFormData] = useState({
+    destination: '',
+    startLocation: '',
+    duration: 3,
+    budget: 50000,
+    interests: [],
+    travelStyle: 'comfortable',
+    groupSize: 2,
+    foodPreferences: 'mixed',
+    transportPreference: 'flight',
+    departureDate: '',
+    returnDate: ''
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [tripItinerary, setTripItinerary] = useState(null);
+  const [showResults, setShowResults] = useState(false);
   const { toast } = useToast();
+
+  const interestOptions = [
+    'Adventure', 'Culture', 'Nature', 'Food', 'History', 
+    'Nightlife', 'Shopping', 'Beach', 'Mountains', 'Art', 'Music', 'Photography'
+  ];
+
+  const travelStyles = [
+    { value: 'budget', label: 'Budget Travel' },
+    { value: 'comfortable', label: 'Comfortable' },
+    { value: 'luxury', label: 'Luxury' },
+    { value: 'backpacking', label: 'Backpacking' }
+  ];
+
+  const transportOptions = [
+    { value: 'flight', label: 'Flight', icon: Plane },
+    { value: 'train', label: 'Train', icon: Train },
+    { value: 'bus', label: 'Bus', icon: Car },
+    { value: 'mixed', label: 'Mixed Transport' }
+  ];
+
+  const foodOptions = [
+    'Vegetarian', 'Non-Vegetarian', 'Vegan', 'Local Cuisine', 
+    'Fine Dining', 'Street Food', 'Mixed'
+  ];
+
+  const handleInterestToggle = (interest) => {
+    setFormData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interest)
+        ? prev.interests.filter(i => i !== interest)
+        : [...prev.interests, interest]
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!userInput.trim()) {
+    if (!formData.destination || !formData.startLocation || !formData.departureDate) {
       toast({
-        title: "Please describe your trip",
-        description: "Tell us where you want to go and what you'd like to do!",
-        variant: "destructive"
+        title: "Missing Information",
+        description: "Please fill in destination, start location, and departure date.",
+        variant: "destructive",
       });
       return;
     }
 
-    setIsProcessing(true);
-    setConfidence(0);
+    setIsLoading(true);
+    setShowResults(false);
 
     try {
-      // Process natural language request with AI
-      const result = await processNaturalLanguageRequest(userInput);
-      
-      if (result) {
-        setExtractedData(result);
-        setConfidence(result.confidence * 100);
+      // Generate itinerary using AI
+      const itinerary = await generateSmartItinerary({
+        ...formData,
+        detailedPlanning: true,
+        includeBooking: false
+      });
+
+      if (itinerary) {
+        setTripItinerary(itinerary);
+        setShowResults(true);
         
         toast({
-          title: "Trip Details Extracted! 🧠",
-          description: "AI has analyzed your request and extracted the key details.",
+          title: "🎉 Itinerary Generated!",
+          description: "AI has created your perfect travel plan",
         });
-
-        // Pass extracted data to parent component
-        if (onTripDataExtracted) {
-          onTripDataExtracted(result);
-        }
       } else {
-        toast({
-          title: "Could not process request",
-          description: "Please try describing your trip in a different way.",
-          variant: "destructive"
-        });
+        throw new Error('Failed to generate itinerary');
       }
     } catch (error) {
-      console.error('AI processing failed:', error);
+      console.error('Itinerary generation error:', error);
       toast({
-        title: "Processing failed",
-        description: "Please try again or use the manual form.",
-        variant: "destructive"
+        title: "Generation Failed",
+        description: "Failed to generate itinerary. Please try again.",
+        variant: "destructive",
       });
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
     }
   };
 
-  const examplePrompts = [
-    "I want to go to Paris for 5 days with a budget of $2000. I love culture and food, traveling with my partner.",
-    "Planning a family trip to Tokyo for 7 days, budget $3000. We have 2 kids and want to see anime culture and try local food.",
-    "Solo backpacking trip to Thailand for 10 days, budget $1500. I'm adventurous and want to explore nature and local markets.",
-    "Business trip to New York for 3 days, budget $1000. Need a hotel near Times Square and good restaurants for meetings."
-  ];
+  const getInterestIcon = (interest) => {
+    const iconMap = {
+      'Adventure': '🏔️',
+      'Culture': '��️',
+      'Nature': '🌿',
+      'Food': '🍽️',
+      'History': '📚',
+      'Nightlife': '🌃',
+      'Shopping': '🛍️',
+      'Beach': '🏖️',
+      'Mountains': '⛰️',
+      'Art': '🎨',
+      'Music': '🎵',
+      'Photography': '📸'
+    };
+    return iconMap[interest] || '🌟';
+  };
 
-  const handleExampleClick = (example) => {
-    setUserInput(example);
+  const getActivityIcon = (activity) => {
+    if (activity.toLowerCase().includes('eat') || activity.toLowerCase().includes('food') || activity.toLowerCase().includes('restaurant')) {
+      return <Utensils className="h-4 w-4" />;
+    } else if (activity.toLowerCase().includes('hotel') || activity.toLowerCase().includes('stay')) {
+      return <Hotel className="h-4 w-4" />;
+    } else if (activity.toLowerCase().includes('flight') || activity.toLowerCase().includes('airport')) {
+      return <Plane className="h-4 w-4" />;
+    } else if (activity.toLowerCase().includes('train') || activity.toLowerCase().includes('station')) {
+      return <Train className="h-4 w-4" />;
+    } else if (activity.toLowerCase().includes('visit') || activity.toLowerCase().includes('tour')) {
+      return <Camera className="h-4 w-4" />;
+    } else if (activity.toLowerCase().includes('shop') || activity.toLowerCase().includes('market')) {
+      return <Globe className="h-4 w-4" />;
+    } else {
+      return <Star className="h-4 w-4" />;
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="max-w-6xl mx-auto p-6 space-y-6">
+      {/* Header */}
+      <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-goginie-primary" />
-            <CardTitle>AI Trip Planner</CardTitle>
-            <Badge variant="secondary" className="ml-auto">
-              <Zap className="h-3 w-3 mr-1" />
-              Powered by AI
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Describe your dream trip in natural language and let AI extract all the details for you!
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Bot className="h-8 w-8" />
+            AI-Powered Trip Planner
+          </CardTitle>
+          <p className="text-blue-100">
+            Tell us your preferences and let AI create the perfect itinerary for you
           </p>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Describe Your Trip
-              </label>
-              <Textarea
-                placeholder="e.g., I want to go to Paris for 5 days with a budget of $2000. I love culture and food, traveling with my partner."
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                className="min-h-[120px]"
-                disabled={isProcessing}
-              />
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full bg-goginie-primary hover:bg-goginie-secondary"
-              disabled={isProcessing || !userInput.trim()}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  AI is analyzing your request...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Extract Trip Details
-                </>
-              )}
-            </Button>
-          </form>
-
-          {/* Example prompts */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">Try these examples:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {examplePrompts.map((example, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="text-left h-auto p-3 text-xs"
-                  onClick={() => handleExampleClick(example)}
-                  disabled={isProcessing}
-                >
-                  {example}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </CardContent>
       </Card>
 
-      {/* Processing indicator */}
-      {isProcessing && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-goginie-primary animate-pulse" />
-                <span className="font-medium">AI is analyzing your request...</span>
-              </div>
-              <Progress value={confidence} className="h-2" />
-              <p className="text-sm text-muted-foreground">
-                Extracting destination, dates, budget, and preferences...
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Extracted data display */}
-      {extractedData && !isProcessing && (
+      {!showResults ? (
+        /* Input Form */
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-green-500" />
-              <CardTitle>Extracted Trip Details</CardTitle>
-              <Badge variant="outline" className="ml-auto">
-                {confidence.toFixed(0)}% confidence
-              </Badge>
-            </div>
+            <CardTitle>Your Travel Preferences</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {extractedData.destination && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Destination</p>
-                    <p className="text-sm text-muted-foreground">{extractedData.destination}</p>
-                  </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="destination">Destination</Label>
+                  <Input
+                    id="destination"
+                    value={formData.destination}
+                    onChange={(e) => setFormData(prev => ({ ...prev, destination: e.target.value }))}
+                    placeholder="Where do you want to go?"
+                    required
+                  />
                 </div>
-              )}
-              
-              {extractedData.duration && (
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Duration</p>
-                    <p className="text-sm text-muted-foreground">{extractedData.duration} days</p>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="startLocation">Starting Location</Label>
+                  <Input
+                    id="startLocation"
+                    value={formData.startLocation}
+                    onChange={(e) => setFormData(prev => ({ ...prev, startLocation: e.target.value }))}
+                    placeholder="Where are you starting from?"
+                    required
+                  />
                 </div>
-              )}
-              
-              {extractedData.budget && (
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Budget</p>
-                    <p className="text-sm text-muted-foreground">${extractedData.budget}</p>
-                  </div>
-                </div>
-              )}
-              
-              {extractedData.groupSize && (
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Group Size</p>
-                    <p className="text-sm text-muted-foreground">{extractedData.groupSize} people</p>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
 
-            {extractedData.interests && extractedData.interests.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium mb-2">Interests</p>
-                <div className="flex flex-wrap gap-1">
-                  {extractedData.interests.map((interest, index) => (
-                    <Badge key={index} variant="secondary">
-                      {interest}
-                    </Badge>
+              {/* Dates and Duration */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="departureDate">Departure Date</Label>
+                  <Input
+                    id="departureDate"
+                    type="date"
+                    value={formData.departureDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, departureDate: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="returnDate">Return Date</Label>
+                  <Input
+                    id="returnDate"
+                    type="date"
+                    value={formData.returnDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, returnDate: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Duration (Days)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={formData.duration}
+                    onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Budget and Group */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget (₹)</Label>
+                  <Input
+                    id="budget"
+                    type="number"
+                    min="1000"
+                    value={formData.budget}
+                    onChange={(e) => setFormData(prev => ({ ...prev, budget: parseInt(e.target.value) }))}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="groupSize">Group Size</Label>
+                  <Input
+                    id="groupSize"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={formData.groupSize}
+                    onChange={(e) => setFormData(prev => ({ ...prev, groupSize: parseInt(e.target.value) }))}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="travelStyle">Travel Style</Label>
+                  <Select value={formData.travelStyle} onValueChange={(value) => setFormData(prev => ({ ...prev, travelStyle: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {travelStyles.map(style => (
+                        <SelectItem key={style.value} value={style.value}>
+                          {style.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Transport Preference */}
+              <div className="space-y-2">
+                <Label>Transport Preference</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {transportOptions.map(option => {
+                    const Icon = option.icon;
+                    return (
+                      <div
+                        key={option.value}
+                        onClick={() => setFormData(prev => ({ ...prev, transportPreference: option.value }))}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          formData.transportPreference === option.value
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center space-y-2">
+                          <Icon className="h-6 w-6" />
+                          <span className="text-sm font-medium">{option.label}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Food Preferences */}
+              <div className="space-y-2">
+                <Label>Food Preferences</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {foodOptions.map(food => (
+                    <div
+                      key={food}
+                      onClick={() => setFormData(prev => ({ ...prev, foodPreferences: food }))}
+                      className={`p-2 border rounded-lg cursor-pointer text-center transition-all ${
+                        formData.foodPreferences === food
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="text-sm">{food}</span>
+                    </div>
                   ))}
                 </div>
               </div>
-            )}
 
-            {extractedData.specialRequirements && extractedData.specialRequirements.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium mb-2">Special Requirements</p>
-                <div className="flex flex-wrap gap-1">
-                  {extractedData.specialRequirements.map((req, index) => (
-                    <Badge key={index} variant="outline">
-                      {req}
-                    </Badge>
+              {/* Interests */}
+              <div className="space-y-2">
+                <Label>Your Interests (Select Multiple)</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {interestOptions.map(interest => (
+                    <div
+                      key={interest}
+                      onClick={() => handleInterestToggle(interest)}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                        formData.interests.includes(interest)
+                          ? 'border-purple-500 bg-purple-50 text-purple-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span>{getInterestIcon(interest)}</span>
+                        <span className="text-sm">{interest}</span>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
-            )}
 
-            <div className="mt-6 flex gap-2">
-              <Button 
-                onClick={() => {
-                  setExtractedData(null);
-                  setUserInput("");
-                  setConfidence(0);
-                }}
-                variant="outline"
-              >
-                Start Over
-              </Button>
-              <Button 
-                onClick={() => onTripDataExtracted && onTripDataExtracted(extractedData)}
-                className="bg-goginie-primary hover:bg-goginie-secondary"
-              >
-                Use This Data
-              </Button>
-            </div>
+              {/* Submit Button */}
+              <div className="flex justify-center pt-6">
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3"
+                  size="lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      AI is Planning Your Trip...
+                    </>
+                  ) : (
+                    <>
+                      <Bot className="h-5 w-5 mr-2" />
+                      Generate AI Itinerary
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
+      ) : (
+        /* Results Display */
+        <div className="space-y-6">
+          {/* Trip Overview */}
+          <Card className="bg-gradient-to-r from-green-500 to-blue-500 text-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-6 w-6" />
+                Your AI-Generated Trip Plan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  <div>
+                    <p className="text-sm opacity-90">Destination</p>
+                    <p className="font-semibold">{formData.destination}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  <div>
+                    <p className="text-sm opacity-90">Duration</p>
+                    <p className="font-semibold">{formData.duration} days</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  <div>
+                    <p className="text-sm opacity-90">Group Size</p>
+                    <p className="font-semibold">{formData.groupSize} people</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  <div>
+                    <p className="text-sm opacity-90">Budget</p>
+                    <p className="font-semibold">₹{formData.budget.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Day-by-Day Itinerary */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-6 w-6" />
+                Day-by-Day Itinerary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {tripItinerary?.itinerary?.map((day, index) => (
+                <Card key={index} className="border-l-4 border-l-blue-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-blue-50">
+                        {day.day || `Day ${index + 1}`}
+                      </Badge>
+                      <span className="text-lg">{day.date}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {day.activities?.map((activity, actIndex) => (
+                        <div key={actIndex} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                          <div className="flex-shrink-0">
+                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                              {getActivityIcon(activity.activity || activity.description)}
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Clock className="h-4 w-4 text-gray-500" />
+                              <span className="font-medium text-blue-600">{activity.time}</span>
+                              {activity.cost && (
+                                <Badge variant="outline" className="ml-auto">
+                                  ₹{activity.cost}
+                                </Badge>
+                              )}
+                            </div>
+                            <h4 className="font-semibold text-gray-900 mb-1">
+                              {activity.activity || activity.description}
+                            </h4>
+                            {activity.location && (
+                              <div className="flex items-center gap-1 text-sm text-gray-600">
+                                <MapPin className="h-3 w-3" />
+                                <span>{activity.location}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Budget Breakdown */}
+          {tripItinerary?.budgetBreakdown && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-6 w-6" />
+                  Budget Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {Object.entries(tripItinerary.budgetBreakdown).map(([category, amount]) => (
+                    <div key={category} className="p-4 bg-gray-50 rounded-lg text-center">
+                      <p className="text-sm text-gray-600 capitalize">{category}</p>
+                      <p className="text-2xl font-bold text-blue-600">₹{amount}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recommendations */}
+          {tripItinerary?.recommendations && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Hotels */}
+              {tripItinerary.recommendations.hotels && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Hotel className="h-5 w-5" />
+                      Recommended Hotels
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {tripItinerary.recommendations.hotels.map((hotel, index) => (
+                      <div key={index} className="p-3 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold">{hotel.name}</h4>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                            <span className="text-sm">{hotel.rating}</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600">{hotel.priceRange}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Restaurants */}
+              {tripItinerary.recommendations.restaurants && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Utensils className="h-5 w-5" />
+                      Recommended Restaurants
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {tripItinerary.recommendations.restaurants.map((restaurant, index) => (
+                      <div key={index} className="p-3 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold">{restaurant.name}</h4>
+                          <Badge variant="outline">{restaurant.cuisine}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{restaurant.priceRange}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Packing List */}
+          {tripItinerary?.packingList && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="h-5 w-5" />
+                  Packing List
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {tripItinerary.packingList.map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Local Tips */}
+          {tripItinerary?.localTips && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Coffee className="h-5 w-5" />
+                  Local Tips
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {tripItinerary.localTips.map((tip, index) => (
+                    <div key={index} className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
+                      <ArrowRight className="h-4 w-4 text-blue-500 mt-0.5" />
+                      <span className="text-sm">{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex justify-center gap-4 pt-6">
+            <Button 
+              onClick={() => setShowResults(false)}
+              variant="outline"
+              size="lg"
+            >
+              Plan Another Trip
+            </Button>
+            <Button 
+              onClick={() => {
+                // Here you can add functionality to save or share the itinerary
+                toast({
+                  title: "Itinerary Saved!",
+                  description: "Your trip plan has been saved successfully.",
+                });
+              }}
+              className="bg-green-600 hover:bg-green-700"
+              size="lg"
+            >
+              Save This Itinerary
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
